@@ -1,0 +1,16 @@
+slug: all-resources
+id: vw1sigwfycll
+version: 0.0.1
+title: Track that has it all
+description: This track uses everything; containers, vms, all cloud accounts, secrets.
+  The whole enchilada.
+icon: ""
+tags: []
+owner: instruqt
+developers:
+- ade@instruqt.com
+lab_config:
+  overlay: false
+  width: 33
+  position: right
+checksum: "13131906778652962853"

@@ -19,12 +19,35 @@ type Challenge struct {
 	Slug       string `yaml:"slug"`
 	Title      string `yaml:"title"`
 	Teaser     string `yaml:"teaser"`
+	Notes      []Note `yaml:"notes"`
+	Tabs       []Tab  `yaml:"tabs"`
 	Assignment string
 	Scripts    []Script
 	Setups     map[string]string
 	Checks     map[string]string
 	Solves     map[string]string
 	Cleanups   map[string]string
+}
+
+type Note struct {
+	Type     string `yaml:"type"`
+	Contents string `yaml:"contents"`
+	URL      string `yaml:"url"`
+}
+
+type Tab struct {
+	Slug                  string
+	Type                  string            `yaml:"type"`
+	Title                 string            `yaml:"title"`
+	URL                   string            `yaml:"url"`
+	Hostname              string            `yaml:"hostname"`
+	Path                  string            `yaml:"path"`
+	Port                  int               `yaml:"port"`
+	CustomRequestHeaders  map[string]string `yaml:"custom_request_headers"`
+	CustomResponseHeaders map[string]string `yaml:"custom_response_headers"`
+	Workdir               string            `yaml:"workdir"`
+	Command               string            `yaml:"command"`
+	NewWindow             bool              `yaml:"new_window"`
 }
 
 type Script struct {
@@ -34,8 +57,9 @@ type Script struct {
 }
 
 type Environment struct {
-	Version    string      `yaml:"version"`
-	Containers []Container `yaml:"containers"`
+	Version         string      `yaml:"version"`
+	Containers      []Container `yaml:"containers"`
+	VirtualMachines []VM        `yaml:"virtualmachines"`
 }
 
 type Container struct {
@@ -56,4 +80,6 @@ type VM struct {
 	Environment          map[string]string `yaml:"environment"`
 	Shell                string            `yaml:"shell"`
 	AllowExternalIngress []string          `yaml:"allow_external_ingress"`
+	Memory               int               `yaml:"memory"`
+	CPU                  int               `yaml:"cpus"`
 }

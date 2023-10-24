@@ -1,0 +1,143 @@
+version: "3"
+containers:
+- name: container
+  image: debian:stable
+  environment:
+    FOO: bar
+    MY_ENV_VAR: is a bit more complex;
+  memory: 256
+virtualmachines:
+- name: virtualmachine
+  image: debian-cloud/debian-10
+  environment:
+    FOO: bar
+    MY_ENV_VAR: is a bit more complex;
+  memory: 4096
+  cpus: 1
+gcp_projects:
+- name: gcptwo
+  services:
+  - storage.googleapis.com
+  roles: []
+- name: gcpone
+  services:
+  - compute.googleapis.com
+  roles: []
+aws_accounts:
+- name: awsone
+  managed_policies:
+  - arn:aws:iam::aws:policy/AmazonEC2FullAccess
+- name: awstwo
+  iam_policy: |-
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Action": "ec2:*",
+                "Effect": "Allow",
+                "Resource": "*"
+            },
+            {
+                "Effect": "Allow",
+                "Action": "elasticloadbalancing:*",
+                "Resource": "*"
+            },
+            {
+                "Effect": "Allow",
+                "Action": "cloudwatch:*",
+                "Resource": "*"
+            },
+            {
+                "Effect": "Allow",
+                "Action": "autoscaling:*",
+                "Resource": "*"
+            },
+            {
+                "Effect": "Allow",
+                "Action": "iam:CreateServiceLinkedRole",
+                "Resource": "*",
+                "Condition": {
+                    "StringEquals": {
+                        "iam:AWSServiceName": [
+                            "autoscaling.amazonaws.com",
+                            "ec2scheduled.amazonaws.com",
+                            "elasticloadbalancing.amazonaws.com",
+                            "spot.amazonaws.com",
+                            "spotfleet.amazonaws.com",
+                            "transitgateway.amazonaws.com"
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+  scp_policy: |-
+    {
+        "Version": "2012-10-17",
+        "Statement": [
+            {
+                "Sid": "DenyAllOutsideEU",
+                "Effect": "Deny",
+                "NotAction": [
+                    "a4b:*",
+                    "acm:*",
+                    "aws-marketplace-management:*",
+                    "aws-marketplace:*",
+                    "aws-portal:*",
+                    "budgets:*",
+                    "ce:*",
+                    "chime:*",
+                    "cloudfront:*",
+                    "config:*",
+                    "cur:*",
+                    "directconnect:*",
+                    "ec2:DescribeRegions",
+                    "ec2:DescribeTransitGateways",
+                    "ec2:DescribeVpnGateways",
+                    "fms:*",
+                    "globalaccelerator:*",
+                    "health:*",
+                    "iam:*",
+                    "importexport:*",
+                    "kms:*",
+                    "mobileanalytics:*",
+                    "networkmanager:*",
+                    "organizations:*",
+                    "pricing:*",
+                    "route53:*",
+                    "route53domains:*",
+                    "s3:GetAccountPublic*",
+                    "s3:ListAllMyBuckets",
+                    "s3:PutAccountPublic*",
+                    "shield:*",
+                    "sts:*",
+                    "support:*",
+                    "trustedadvisor:*",
+                    "waf-regional:*",
+                    "waf:*",
+                    "wafv2:*",
+                    "wellarchitected:*"
+                ],
+                "Resource": "*",
+                "Condition": {
+                    "StringNotEquals": {
+                        "aws:RequestedRegion": [
+                            "eu-central-1",
+                            "eu-west-1"
+                        ]
+                    },
+                    "ArnNotLike": {
+                        "aws:PrincipalARN": [
+                            "arn:aws:iam::*:role/Role1AllowedToBypassThisSCP",
+                            "arn:aws:iam::*:role/Role2AllowedToBypassThisSCP"
+                        ]
+                    }
+                }
+            }
+        ]
+    }
+azure_subscriptions:
+- name: azuretwo
+- name: azureone
+  roles:
+  - Contributor

@@ -1,0 +1,24 @@
+slug: vault-dynamic-database-credentials
+id: 71mgardlj8dl
+version: 1.8.3
+title: Vault Dynamic Database Credentials
+teaser: |
+  Generate dynamic credentials for a MySQL database from Vault.
+description: |-
+  The Vault Database secrets engine lets you generate dynamic, time-bound credentials for many different databases.
+
+  In this track, you will do this for a MySQL database that is running on the same server as the Vault server itself.
+icon: https://storage.googleapis.com/instruqt-hashicorp-tracks/logo/vault.png
+tags:
+- dynamic-secrets
+- vault
+- database
+owner: instruqt
+developers:
+- wietse@instruqt.com
+show_timer: true
+lab_config:
+  overlay: false
+  width: 33
+  position: right
+checksum: "1538611525933284156"

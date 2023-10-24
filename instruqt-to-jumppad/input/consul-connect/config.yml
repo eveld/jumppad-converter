@@ -1,0 +1,14 @@
+version: "3"
+containers:
+- name: consul
+  image: gcr.io/instruqt/consul-connect
+  shell: /bin/bash
+  ports:
+  - 8300
+  - 8301
+  - 8302
+  - 8500
+  - 8600
+  - 9002
+  - 9003
+  memory: 128
