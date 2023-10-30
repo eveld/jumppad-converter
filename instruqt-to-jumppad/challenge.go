@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -12,9 +13,28 @@ import (
 	"github.com/jumppad-labs/hclconfig/convert"
 )
 
-func GenerateChallenge(challenge *model.Challenge) *hclwrite.Block {
+func GenerateChallenge(challenge *model.Challenge, tabs map[string]model.Tab) *hclwrite.Block {
 	challengeBlock := hclwrite.NewBlock("resource", []string{"challenge", challenge.Slug})
 	challengeBody := challengeBlock.Body()
+
+	// create a directory for the challenge
+	challengePath := fmt.Sprintf("out/%s", challenge.Slug)
+	err := os.MkdirAll(challengePath, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// create a directory for the challenge scripts
+	err = os.MkdirAll(filepath.Join(challengePath, "scripts"), 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// create a directory for the challenge notes
+	err = os.MkdirAll(filepath.Join(challengePath, "notes"), 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// title
 	title, err := convert.GoToCtyValue(challenge.Title)
@@ -31,7 +51,7 @@ func GenerateChallenge(challenge *model.Challenge) *hclwrite.Block {
 	challengeBody.SetAttributeValue("teaser", teaser)
 
 	// assignment
-	err = os.WriteFile(fmt.Sprintf("out/assignments/%s.mdx", challenge.Slug), []byte(challenge.Assignment), 0755)
+	err = os.WriteFile(fmt.Sprintf("out/%s/assignment.mdx", challenge.Slug), []byte(challenge.Assignment), 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -39,41 +59,44 @@ func GenerateChallenge(challenge *model.Challenge) *hclwrite.Block {
 	assignment := hclwrite.Tokens{
 		{
 			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte(fmt.Sprintf("file(\"assignments/%s.mdx\")", challenge.Slug)),
+			Bytes: []byte(fmt.Sprintf("file(\"%s/assignment.mdx\")", challenge.Slug)),
 		},
 	}
 	challengeBody.SetAttributeRaw("assignment", assignment)
 	challengeBody.AppendNewline()
 
 	// tabs
-	tabs := hclwrite.Tokens{
+	challengeTabs := hclwrite.Tokens{
 		{
 			Type:  hclsyntax.TokenIdent,
 			Bytes: []byte("{\n"),
 		},
 	}
 
-	for index, _ := range challenge.Tabs {
+	index := 0
+	for slug := range tabs {
 		separator := ","
-		if index == len(challenge.Tabs)-1 {
+		if index == len(tabs)-1 {
 			separator = ""
 		}
 
-		tabs = append(tabs, &hclwrite.Token{
+		challengeTabs = append(challengeTabs, &hclwrite.Token{
 			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte(fmt.Sprintf("   resource.tab.%s_%d%s\n", challenge.Slug, index, separator)),
+			Bytes: []byte(fmt.Sprintf("   resource.tab.%s%s\n", slug, separator)),
 		})
+
+		index++
 	}
 
-	tabs = append(tabs, &hclwrite.Token{
+	challengeTabs = append(challengeTabs, &hclwrite.Token{
 		Type:  hclsyntax.TokenIdent,
 		Bytes: []byte(" }"),
 	})
 
-	challengeBody.SetAttributeRaw("tabs", tabs)
+	challengeBody.SetAttributeRaw("tabs", challengeTabs)
 
 	// note
-	for _, note := range challenge.Notes {
+	for index, note := range challenge.Notes {
 		challengeBody.AppendNewline()
 		block := hclwrite.NewBlock("note", []string{})
 		body := block.Body()
@@ -85,47 +108,19 @@ func GenerateChallenge(challenge *model.Challenge) *hclwrite.Block {
 		body.SetAttributeValue("type", noteType)
 
 		if note.Contents != "" {
-			if strings.Contains(note.Contents, "\n") {
-				// <<EOF contents
-				eof := hclwrite.Tokens{}
-
-				lines := []string{"<<-EOF"}
-				lines = append(lines, strings.Split(note.Contents, "\n")...)
-				lines = append(lines, "   EOF")
-
-				for index, line := range lines {
-					space := "     "
-					newline := "\n"
-
-					if index == 0 {
-						space = ""
-					}
-
-					if index == len(lines)-2 && line == "" {
-						continue
-					}
-
-					if index == len(lines)-1 {
-						space = ""
-						newline = ""
-					}
-
-					eof = append(eof, &hclwrite.Token{
-						Type:  hclsyntax.TokenIdent,
-						Bytes: []byte(space + line + newline),
-					})
-				}
-
-				body.SetAttributeRaw("contents", eof)
-			} else {
-				// single line
-				description, err := convert.GoToCtyValue(note.Contents)
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				body.SetAttributeValue("contents", description)
+			noteFile := fmt.Sprintf("%s/notes/note_%d.mdx", challenge.Slug, index)
+			err = os.WriteFile(filepath.Join("out", noteFile), []byte(note.Contents), 0755)
+			if err != nil {
+				log.Fatal(err)
 			}
+
+			note := hclwrite.Tokens{
+				{
+					Type:  hclsyntax.TokenIdent,
+					Bytes: []byte(fmt.Sprintf("file(\"%s\")", noteFile)),
+				},
+			}
+			body.SetAttributeRaw("note", note)
 		}
 
 		if note.URL != "" {
@@ -150,17 +145,19 @@ func GenerateChallenge(challenge *model.Challenge) *hclwrite.Block {
 		}
 		body.SetAttributeValue("target", target)
 
-		setupfile := fmt.Sprintf("out/scripts/%s/%s_%s.sh", challenge.Slug, s.Type, s.Target)
-		err = os.WriteFile(setupfile, []byte(s.Content), 0755)
+		scriptFile := fmt.Sprintf("%s/scripts/%s_%s.sh", challenge.Slug, s.Type, s.Target)
+		err = os.WriteFile(filepath.Join("out", scriptFile), []byte(s.Content), 0755)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		script, err := convert.GoToCtyValue(setupfile)
-		if err != nil {
-			log.Fatal(err)
+		script := hclwrite.Tokens{
+			{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(fmt.Sprintf("file(\"%s\")", scriptFile)),
+			},
 		}
-		body.SetAttributeValue("script", script)
+		body.SetAttributeRaw("script", script)
 	}
 
 	return challengeBlock

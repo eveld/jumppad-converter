@@ -1,238 +1,204 @@
-resource "track" "vault_dynamic_database_credentials" {
-  title       = "Vault Dynamic Database Credentials"
+resource "track" "consul_connect" {
+  title       = "Getting started with Consul Connect"
   owner       = "instruqt"
-  teaser      = "Generate dynamic credentials for a MySQL database from Vault."
-  description = <<-EOF
-    The Vault Database secrets engine lets you generate dynamic, time-bound credentials for many different databases.
-    
-    In this track, you will do this for a MySQL database that is running on the same server as the Vault server itself.
-  EOF
-  tags        = ["dynamic-secrets", "vault", "database"]
-  developers  = ["wietse@instruqt.com"]
-  icon        = "https://storage.googleapis.com/instruqt-hashicorp-tracks/logo/vault.png"
+  teaser      = "Learn the basics of Consul Connect"
+  description = file("description.mdx")
+
+  tags       = ["hashicorp", "consul connect"]
+  developers = ["ade@instruqt.com"]
+  icon       = "https://storage.googleapis.com/instruqt-frontend/assets/hashicorp/tracks/consul.png"
 
   challenges = {
-    resource.challenge.enable_database_secrets_engine,
-    resource.challenge.configure_database_secrets_engine,
-    resource.challenge.generate_database_creds,
-    resource.challenge.renew_revoke_database_creds
+    resource.challenge.examine_the_counting_service,
+    resource.challenge.service_configuration,
+    resource.challenge.start_the_counting_service,
+    resource.challenge.start_the_dashboard_service,
+    resource.challenge.deny_service_connections,
+    resource.challenge.allow_dashboard_connection
   }
 }
 
-resource "challenge" "enable_database_secrets_engine" {
-  title      = "Enable the Database Secrets Engine"
-  teaser     = "Enable the Database secrets engine on the Vault server."
-  assignment = file("assignments/enable_database_secrets_engine.mdx")
+resource "challenge" "examine_the_counting_service" {
+  title      = "Examine the counting service"
+  teaser     = "Taking a look at how services and proxies are configured in Consul Connect."
+  assignment = file("examine_the_counting_service/assignment.mdx")
 
   tabs = {
-    resource.tab.enable_database_secrets_engine_0,
-    resource.tab.enable_database_secrets_engine_1,
-    resource.tab.enable_database_secrets_engine_2
+    resource.tab.terminal_consul,
+    resource.tab.code_consul,
+    resource.tab.service_consul_8500
   }
 
   note {
-    type     = "text"
-    contents = <<-EOF
-      Secrets engines are Vault plugins that store, generate, or encrypt data. Secrets engines are incredibly flexible, so it is easiest to think about them in terms of their function.
-      
-      Vault's Database secrets engine dynamically generates credentials for many databases.
-      
-      To learn more, see these links:
-      https://www.vaultproject.io/docs/secrets/databases/
-      https://www.vaultproject.io/docs/secrets/databases/mysql-maria/
-    EOF
+    type = "text"
+    note = file("examine_the_counting_service/notes/note_0.mdx")
+  }
+
+  note {
+    type = "video"
+    url  = "https://www.youtube.com/embed/8T8t4-hQY74?autoplay=0&rel=0"
   }
 
   check {
-    target = "vault-mysql-server"
-    script = "out/scripts/enable_database_secrets_engine/check_vault-mysql-server.sh"
+    target = "consul"
+    script = file("examine_the_counting_service/scripts/check_consul.sh")
   }
 
   setup {
-    target = "vault-mysql-server"
-    script = "out/scripts/enable_database_secrets_engine/setup_vault-mysql-server.sh"
-  }
-
-  solve {
-    target = "vault-mysql-server"
-    script = "out/scripts/enable_database_secrets_engine/solve_vault-mysql-server.sh"
+    target = "consul"
+    script = file("examine_the_counting_service/scripts/setup_consul.sh")
   }
 }
 
-resource "tab" "code_vault-mysql-server" {
+resource "challenge" "service_configuration" {
+  title      = "Service configuration"
+  teaser     = "The service configuration files describe the service and configure the Consul Connect proxy."
+  assignment = file("service_configuration/assignment.mdx")
+
+  tabs = {
+    resource.tab.terminal_consul
+  }
+
+  note {
+    type = "text"
+    note = file("service_configuration/notes/note_0.mdx")
+  }
+}
+
+resource "challenge" "start_the_counting_service" {
+  title      = "Starting the counting service"
+  teaser     = "Starting the backend service which we will connect through via the Consul Connect proxy."
+  assignment = file("start_the_counting_service/assignment.mdx")
+
+  tabs = {
+    resource.tab.terminal_consul,
+    resource.tab.service_consul_9003,
+    resource.tab.service_consul_8500
+  }
+
+  note {
+    type = "text"
+    note = file("start_the_counting_service/notes/note_0.mdx")
+  }
+
+  check {
+    target = "consul"
+    script = file("start_the_counting_service/scripts/check_consul.sh")
+  }
+
+  setup {
+    target = "consul"
+    script = file("start_the_counting_service/scripts/setup_consul.sh")
+  }
+}
+
+resource "challenge" "start_the_dashboard_service" {
+  title      = "Start the dashboard service"
+  teaser     = "Starting the frontend service that will connect to the backend via the Consul Connect proxy."
+  assignment = file("start_the_dashboard_service/assignment.mdx")
+
+  tabs = {
+    resource.tab.service_consul_8500,
+    resource.tab.terminal_consul,
+    resource.tab.service_consul_9002
+  }
+
+  note {
+    type = "text"
+    note = file("start_the_dashboard_service/notes/note_0.mdx")
+  }
+
+  check {
+    target = "consul"
+    script = file("start_the_dashboard_service/scripts/check_consul.sh")
+  }
+
+  setup {
+    target = "consul"
+    script = file("start_the_dashboard_service/scripts/setup_consul.sh")
+  }
+}
+
+resource "challenge" "deny_service_connections" {
+  title      = "Deny service connections"
+  teaser     = "Denying all connections to services by default."
+  assignment = file("deny_service_connections/assignment.mdx")
+
+  tabs = {
+    resource.tab.service_consul_8500,
+    resource.tab.service_consul_9002,
+    resource.tab.terminal_consul
+  }
+
+  note {
+    type = "text"
+    note = file("deny_service_connections/notes/note_0.mdx")
+  }
+
+  check {
+    target = "consul"
+    script = file("deny_service_connections/scripts/check_consul.sh")
+  }
+
+  setup {
+    target = "consul"
+    script = file("deny_service_connections/scripts/setup_consul.sh")
+  }
+}
+
+resource "challenge" "allow_dashboard_connection" {
+  title      = "Allow dashboard connection"
+  teaser     = "Allow the frontend service to connect to the backend service."
+  assignment = file("allow_dashboard_connection/assignment.mdx")
+
+  tabs = {
+    resource.tab.service_consul_8500,
+    resource.tab.service_consul_9002
+  }
+
+  note {
+    type = "text"
+    note = file("allow_dashboard_connection/notes/note_0.mdx")
+  }
+
+  check {
+    target = "consul"
+    script = file("allow_dashboard_connection/scripts/check_consul.sh")
+  }
+}
+
+resource "tab" "terminal_consul" {
   type     = "terminal"
-  title    = "Vault CLI"
-  hostname = "vault-mysql-server"
+  title    = "Terminal"
+  hostname = "consul"
 }
 
-resource "tab" "code_vault-mysql-server" {
-  type     = "service"
-  title    = "Vault UI"
-  hostname = "vault-mysql-server"
-  port     = 8200
-}
-
-resource "tab" "code_vault-mysql-server" {
+resource "tab" "code_consul" {
   type     = "code"
   title    = "Editor"
-  hostname = "vault-mysql-server"
+  hostname = "consul"
+  path     = "/etc/consul.d"
 }
 
-resource "challenge" "configure_database_secrets_engine" {
-  title      = "Configure the Database Secrets Engine"
-  teaser     = "Configure the Database secrets engine on the Vault server."
-  assignment = file("assignments/configure_database_secrets_engine.mdx")
-
-  tabs = {
-    resource.tab.configure_database_secrets_engine_0,
-    resource.tab.configure_database_secrets_engine_1
-  }
-
-  note {
-    type     = "text"
-    contents = <<-EOF
-      Vault's Database secrets engine dynamically generates credentials (username and password) for many databases.
-      
-      In this challenge, you will configure the database secrets engine you enabled in the previous challenge on the path `lob_a/workshop/database` to work with the local instance of the MySQL database. We use a specific path rather than the default "database" to illustrate that multiple instances of the database secrets engine could be configured for different lines of business that might each have multiple databases.
-    EOF
-  }
-
-  note {
-    type     = "text"
-    contents = <<-EOF
-      We will configure a connection and two roles for the database. The roles will allow dynamic generation of credentials with different lifetimes.
-      
-      The first role, "workshop-app-long", will generate credentials initially valid for 1 hour with a maximum lifetime of 24 hours. The second role, "workshop-app", will generate credentials initially valid for 3 minutes with a maximum lifetime of 6 minutes.
-      
-      To learn more, see these links:
-      https://www.vaultproject.io/docs/secrets/databases/
-      https://www.vaultproject.io/docs/secrets/databases/mysql-maria/
-      https://www.vaultproject.io/api/secret/databases/
-      https://www.vaultproject.io/api/secret/databases/mysql-maria/
-    EOF
-  }
-
-  check {
-    target = "vault-mysql-server"
-    script = "out/scripts/configure_database_secrets_engine/check_vault-mysql-server.sh"
-  }
-
-  solve {
-    target = "vault-mysql-server"
-    script = "out/scripts/configure_database_secrets_engine/solve_vault-mysql-server.sh"
-  }
-}
-
-resource "tab" "service_vault-mysql-server_8200" {
-  type     = "terminal"
-  title    = "Vault CLI"
-  hostname = "vault-mysql-server"
-}
-
-resource "tab" "service_vault-mysql-server_8200" {
+resource "tab" "service_consul_9003" {
   type     = "service"
-  title    = "Vault UI"
-  hostname = "vault-mysql-server"
-  port     = 8200
+  title    = "Counting"
+  hostname = "consul"
+  port     = 9003
 }
 
-resource "challenge" "generate_database_creds" {
-  title      = "Generate and Use Dynamic Database Credentials"
-  teaser     = "Generate and use dynamic database credentials for the MySQL database."
-  assignment = file("assignments/generate_database_creds.mdx")
-
-  tabs = {
-    resource.tab.generate_database_creds_0,
-    resource.tab.generate_database_creds_1
-  }
-
-  note {
-    type     = "text"
-    contents = <<-EOF
-      In this challenge, you will dynamically generate credentials (username and password) against the two roles you configured in the previous challenge.
-      
-      You will then connect to the MySQL server with the credentials generated against the shorter duration role, "workshop-app". You will also validate that Vault deletes the credentials from the MySQL server after 3 minutes.
-      
-      To learn more, see these links:
-      https://www.vaultproject.io/docs/secrets/databases/mysql-maria/
-      https://www.vaultproject.io/docs/secrets/databases/#usage
-      https://www.vaultproject.io/api/secret/databases/#generate-credentials
-    EOF
-  }
-
-  check {
-    target = "vault-mysql-server"
-    script = "out/scripts/generate_database_creds/check_vault-mysql-server.sh"
-  }
-
-  setup {
-    target = "vault-mysql-server"
-    script = "out/scripts/generate_database_creds/setup_vault-mysql-server.sh"
-  }
-
-  solve {
-    target = "vault-mysql-server"
-    script = "out/scripts/generate_database_creds/solve_vault-mysql-server.sh"
-  }
-}
-
-resource "tab" "service_vault-mysql-server_8200" {
-  type     = "terminal"
-  title    = "Vault CLI"
-  hostname = "vault-mysql-server"
-}
-
-resource "tab" "service_vault-mysql-server_8200" {
+resource "tab" "service_consul_9002" {
   type     = "service"
-  title    = "Vault UI"
-  hostname = "vault-mysql-server"
-  port     = 8200
+  title    = "Dashboard UI"
+  hostname = "consul"
+  port     = 9002
 }
 
-resource "challenge" "renew_revoke_database_creds" {
-  title      = "Renew and Revoke Database Credentials"
-  teaser     = "Renew and revoke database credentials for the MySQL database."
-  assignment = file("assignments/renew_revoke_database_creds.mdx")
-
-  tabs = {
-    resource.tab.renew_revoke_database_creds_0,
-    resource.tab.renew_revoke_database_creds_1
-  }
-
-  note {
-    type     = "text"
-    contents = <<-EOF
-      In this challenge, you will learn how to renew and revoke credentials generated by Vault's database secrets engine.
-      
-      You will see that it is possible to extend the lifetime of generated credentials when they have not yet expired by renewing them. You will also see that they cannot be renewed beyond the `max_ttl` of the role against which the credentials were generated.
-      
-      To learn more, see these links:
-      https://www.vaultproject.io/api/system/leases/#renew-lease
-      https://www.vaultproject.io/api/system/leases/#revoke-lease
-    EOF
-  }
-
-  check {
-    target = "vault-mysql-server"
-    script = "out/scripts/renew_revoke_database_creds/check_vault-mysql-server.sh"
-  }
-
-  solve {
-    target = "vault-mysql-server"
-    script = "out/scripts/renew_revoke_database_creds/solve_vault-mysql-server.sh"
-  }
-}
-
-resource "tab" "service_vault-mysql-server_8200" {
-  type     = "terminal"
-  title    = "Vault CLI"
-  hostname = "vault-mysql-server"
-}
-
-resource "tab" "service_vault-mysql-server_8200" {
+resource "tab" "service_consul_8500" {
   type     = "service"
-  title    = "Vault UI"
-  hostname = "vault-mysql-server"
-  port     = 8200
+  title    = "Consul UI"
+  hostname = "consul"
+  path     = "/ui/dc1/intentions"
+  port     = 8500
 }
 

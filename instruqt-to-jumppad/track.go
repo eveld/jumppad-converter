@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/hashicorp/hcl/v2/hclsyntax"
@@ -33,47 +34,20 @@ func GenerateTrack(track *model.Track, challenges []model.Challenge) *hclwrite.B
 	}
 	trackBody.SetAttributeValue("teaser", teaser)
 
-	if strings.Contains(track.Description, "\n") {
-		// <<EOF description
-		eof := hclwrite.Tokens{}
-
-		lines := []string{"<<-EOF"}
-		lines = append(lines, strings.Split(track.Description, "\n")...)
-		lines = append(lines, " EOF")
-
-		for index, line := range lines {
-			space := "   "
-			newline := "\n"
-
-			if index == 0 {
-				space = ""
-			}
-
-			if index == len(lines)-2 && line == "" {
-				continue
-			}
-
-			if index == len(lines)-1 {
-				space = ""
-				newline = ""
-			}
-
-			eof = append(eof, &hclwrite.Token{
-				Type:  hclsyntax.TokenIdent,
-				Bytes: []byte(space + line + newline),
-			})
-		}
-
-		trackBody.SetAttributeRaw("description", eof)
-	} else {
-		// single line
-		description, err := convert.GoToCtyValue(track.Description)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		trackBody.SetAttributeValue("description", description)
+	// description
+	err = os.WriteFile("out/description.mdx", []byte(track.Description), 0755)
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	description := hclwrite.Tokens{
+		{
+			Type:  hclsyntax.TokenIdent,
+			Bytes: []byte("file(\"description.mdx\")"),
+		},
+	}
+	trackBody.SetAttributeRaw("description", description)
+	trackBody.AppendNewline()
 
 	tags, err := convert.GoToCtyValue(track.Tags)
 	if err != nil {

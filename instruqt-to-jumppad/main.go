@@ -43,12 +43,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = os.MkdirAll("out/assignments", 0755)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = os.MkdirAll("out/scripts", 0755)
+	err = os.MkdirAll("out", 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -60,41 +55,24 @@ func main() {
 	root.AppendBlock(trackBlock)
 	root.AppendNewline()
 
+	allTabs := map[string]model.Tab{}
 	for _, challenge := range challenges {
-		err = os.MkdirAll(fmt.Sprintf("out/scripts/%s", challenge.Slug), 0755)
-		if err != nil {
-			log.Fatal(err)
+		challengeTabs := map[string]model.Tab{}
+		for _, tab := range challenge.Tabs {
+			slug := GenerateTabSlug(tab)
+			challengeTabs[slug] = tab
+			allTabs[slug] = tab
 		}
 
-		challengeBlock := GenerateChallenge(&challenge)
+		challengeBlock := GenerateChallenge(&challenge, challengeTabs)
 		root.AppendBlock(challengeBlock)
 		root.AppendNewline()
+	}
 
-		var slug string
-		tabs := map[string]model.Tab{}
-		for index, tab := range challenge.Tabs {
-			switch tab.Type {
-			case "service":
-				slug = fmt.Sprintf("%s_%s_%d", tab.Type, tab.Hostname, tab.Port)
-			case "terminal":
-				slug = fmt.Sprintf("%s_%s", tab.Type, tab.Hostname)
-			case "code":
-				slug = fmt.Sprintf("%s_%s", tab.Type, tab.Hostname)
-			default:
-				slug = fmt.Sprintf("%s_%d", challenge.Slug, index)
-			}
-
-			_, ok := tabs[slug]
-			if !ok {
-				tabs[slug] = tab
-			}
-		}
-
-		for _, tab := range tabs {
-			tabBlock := GenerateTab(&tab, slug)
-			root.AppendBlock(tabBlock)
-			root.AppendNewline()
-		}
+	for slug, tab := range allTabs {
+		tabBlock := GenerateTab(&tab, slug)
+		root.AppendBlock(tabBlock)
+		root.AppendNewline()
 	}
 
 	err = os.WriteFile("out/track.hcl", f.Bytes(), 0755)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/hashicorp/hcl/v2/hclwrite"
@@ -8,13 +9,25 @@ import (
 	"github.com/jumppad-labs/hclconfig/convert"
 )
 
+func GenerateTabSlug(tab model.Tab) string {
+	var slug string
+	switch tab.Type {
+	case "service":
+		slug = fmt.Sprintf("%s_%s_%d", tab.Type, tab.Hostname, tab.Port)
+	case "terminal":
+		slug = fmt.Sprintf("%s_%s", tab.Type, tab.Hostname)
+	case "code":
+		slug = fmt.Sprintf("%s_%s", tab.Type, tab.Hostname)
+	}
+	return slug
+}
+
 func GenerateTab(tab *model.Tab, slug string) *hclwrite.Block {
 	/*
 		Tab naming:
 		service: resource.tab.type_hostname_port
 		terminal: resource.tab.type_hostname
 		code: resource.tab.type_hostname
-
 	*/
 
 	block := hclwrite.NewBlock("resource", []string{"tab", slug})

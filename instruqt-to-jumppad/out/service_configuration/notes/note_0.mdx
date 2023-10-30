@@ -1,0 +1,7 @@
+The counting.json service configuration file contains three important settings:
+
+1. **Consul will look for a service running on port 9003**. It will advertise that as the counting service. On a properly configured node, this can be reached as counting.service.consul through DNS.
+
+2. **A blank proxy is defined**. This enables proxy communication through Consul Connect but doesn't define any connections right away.
+
+3. **A health check examines the local /health endpoint** every second to determine whether the service is healthy and can be exposed to other services.

@@ -1,0 +1,21 @@
+**Create an intention** that **denies all** communication between all services.
+
+---
+
+This is achieved be creating an intention from *** (All Services)** to *** (All Services)** with a value of **deny**.
+
+You can optionally add a description such as "Deny all communication by default".
+
+Then save the newly created intention.
+
+Since existing proxies will not be terminated when a deny rule is created, we must restart the dashboard-service.
+
+Restart it by typing
+
+```
+killall dashboard-service
+```
+
+in the Terminal tab. We will then restart it for you.
+
+If you look at the **Dashboard** and you will see that it cannot reach the backend counting-service because all connections are denied.

@@ -2,30 +2,63 @@ resource "network" "main" {
   subnet = "10.0.5.0/16"
 }
 
-resource "vm" "vault-mysql-server" {
-  config {
-    arch = "x86_64"
-  }
-
-  image = "instruqt-hashicorp/vault-1-8-3-with-mysql-and-python-web-app"
-
-  resources {
-    cpu    = 1
-    memory = 4096
+resource "container" "consul" {
+  image {
+    name = "gcr.io/instruqt/consul-connect"
   }
 
   network {
     id = resource.network.main.id
   }
 
+  port {
+    local  = 8300
+    remote = 8300
+    host   = 8300
+  }
+
+  port {
+    local  = 8301
+    remote = 8301
+    host   = 8301
+  }
+
+  port {
+    local  = 8302
+    remote = 8302
+    host   = 8302
+  }
+
+  port {
+    local  = 8500
+    remote = 8500
+    host   = 8500
+  }
+
+  port {
+    local  = 8600
+    remote = 8600
+    host   = 8600
+  }
+
+  port {
+    local  = 9002
+    remote = 9002
+    host   = 9002
+  }
+
+  port {
+    local  = 9003
+    remote = 9003
+    host   = 9003
+  }
+
   environment = {
-    MYSQL_ENDPOINT = "localhost:3306"
-    MYSQL_HOST     = "localhost"
-    MYSQL_PASSWORD = "sJ2w*8NX"
-    MYSQL_PORT     = "3306"
-    SHELL          = "/bin/bash -l"
-    VAULT_ADDR     = "http://localhost:8200"
-    VAULT_TOKEN    = "root"
+    SHELL = "/bin/bash"
+  }
+
+  resources {
+    memory = 128
   }
 }
 
