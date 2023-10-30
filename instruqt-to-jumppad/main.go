@@ -15,6 +15,12 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type Config struct {
+	Track       model.Track
+	Challenges  []model.Challenge
+	Environment model.Environment
+}
+
 func main() {
 	args := os.Args[1:]
 
@@ -38,6 +44,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	config := &Config{
+		Track:       *track,
+		Challenges:  challenges,
+		Environment: *env,
+	}
+
 	err = os.RemoveAll("out")
 	if err != nil {
 		log.Fatal(err)
@@ -51,7 +63,7 @@ func main() {
 	f := hclwrite.NewEmptyFile()
 	root := f.Body()
 
-	trackBlock := GenerateTrack(track, challenges)
+	trackBlock := config.GenerateTrack(track, challenges)
 	root.AppendBlock(trackBlock)
 	root.AppendNewline()
 
@@ -59,18 +71,18 @@ func main() {
 	for _, challenge := range challenges {
 		challengeTabs := map[string]model.Tab{}
 		for _, tab := range challenge.Tabs {
-			slug := GenerateTabSlug(tab)
+			slug := config.GenerateTabSlug(tab)
 			challengeTabs[slug] = tab
 			allTabs[slug] = tab
 		}
 
-		challengeBlock := GenerateChallenge(&challenge, challengeTabs)
+		challengeBlock := config.GenerateChallenge(&challenge, challengeTabs)
 		root.AppendBlock(challengeBlock)
 		root.AppendNewline()
 	}
 
 	for slug, tab := range allTabs {
-		tabBlock := GenerateTab(&tab, slug)
+		tabBlock := config.GenerateTab(&tab, slug)
 		root.AppendBlock(tabBlock)
 		root.AppendNewline()
 	}
@@ -210,7 +222,7 @@ func readConfig(path string) (*model.Environment, error) {
 	return env, nil
 }
 
-func GenerateComment(comment string) hclwrite.Tokens {
+func (c *Config) GenerateComment(comment string) hclwrite.Tokens {
 	return hclwrite.Tokens{
 		{
 			Type:  hclsyntax.TokenComment,
@@ -225,4 +237,20 @@ func GenerateComment(comment string) hclwrite.Tokens {
 			Bytes: []byte("//\n"),
 		},
 	}
+}
+
+func (c *Config) LookupResource(hostname string) (string, error) {
+	for _, vm := range c.Environment.VirtualMachines {
+		if vm.Name == hostname {
+			return fmt.Sprintf("resource.vm.%s", vm.Name), nil
+		}
+	}
+
+	for _, container := range c.Environment.Containers {
+		if container.Name == hostname {
+			return fmt.Sprintf("resource.container.%s", container.Name), nil
+		}
+	}
+
+	return "", fmt.Errorf("could not find resource for hostname %s", hostname)
 }

@@ -24,9 +24,9 @@ resource "challenge" "examine_the_counting_service" {
   assignment = file("examine_the_counting_service/assignment.mdx")
 
   tabs = {
+    resource.tab.service_consul_8500,
     resource.tab.terminal_consul,
-    resource.tab.code_consul,
-    resource.tab.service_consul_8500
+    resource.tab.code_consul
   }
 
   note {
@@ -40,12 +40,12 @@ resource "challenge" "examine_the_counting_service" {
   }
 
   check {
-    target = "consul"
+    target = resource.container.consul
     script = file("examine_the_counting_service/scripts/check_consul.sh")
   }
 
   setup {
-    target = "consul"
+    target = resource.container.consul
     script = file("examine_the_counting_service/scripts/setup_consul.sh")
   }
 }
@@ -71,9 +71,9 @@ resource "challenge" "start_the_counting_service" {
   assignment = file("start_the_counting_service/assignment.mdx")
 
   tabs = {
-    resource.tab.terminal_consul,
     resource.tab.service_consul_9003,
-    resource.tab.service_consul_8500
+    resource.tab.service_consul_8500,
+    resource.tab.terminal_consul
   }
 
   note {
@@ -82,12 +82,12 @@ resource "challenge" "start_the_counting_service" {
   }
 
   check {
-    target = "consul"
+    target = resource.container.consul
     script = file("start_the_counting_service/scripts/check_consul.sh")
   }
 
   setup {
-    target = "consul"
+    target = resource.container.consul
     script = file("start_the_counting_service/scripts/setup_consul.sh")
   }
 }
@@ -109,12 +109,12 @@ resource "challenge" "start_the_dashboard_service" {
   }
 
   check {
-    target = "consul"
+    target = resource.container.consul
     script = file("start_the_dashboard_service/scripts/check_consul.sh")
   }
 
   setup {
-    target = "consul"
+    target = resource.container.consul
     script = file("start_the_dashboard_service/scripts/setup_consul.sh")
   }
 }
@@ -136,12 +136,12 @@ resource "challenge" "deny_service_connections" {
   }
 
   check {
-    target = "consul"
+    target = resource.container.consul
     script = file("deny_service_connections/scripts/check_consul.sh")
   }
 
   setup {
-    target = "consul"
+    target = resource.container.consul
     script = file("deny_service_connections/scripts/setup_consul.sh")
   }
 }
@@ -162,43 +162,43 @@ resource "challenge" "allow_dashboard_connection" {
   }
 
   check {
-    target = "consul"
+    target = resource.container.consul
     script = file("allow_dashboard_connection/scripts/check_consul.sh")
   }
 }
 
-resource "tab" "terminal_consul" {
-  type     = "terminal"
-  title    = "Terminal"
-  hostname = "consul"
-}
-
-resource "tab" "code_consul" {
-  type     = "code"
-  title    = "Editor"
-  hostname = "consul"
-  path     = "/etc/consul.d"
-}
-
 resource "tab" "service_consul_9003" {
-  type     = "service"
-  title    = "Counting"
-  hostname = "consul"
-  port     = 9003
+  type   = "service"
+  title  = "Counting"
+  target = resource.container.consul
+  port   = 9003
 }
 
 resource "tab" "service_consul_9002" {
-  type     = "service"
-  title    = "Dashboard UI"
-  hostname = "consul"
-  port     = 9002
+  type   = "service"
+  title  = "Dashboard UI"
+  target = resource.container.consul
+  port   = 9002
 }
 
 resource "tab" "service_consul_8500" {
-  type     = "service"
-  title    = "Consul UI"
-  hostname = "consul"
-  path     = "/ui/dc1/intentions"
-  port     = 8500
+  type   = "service"
+  title  = "Consul UI"
+  target = resource.container.consul
+  path   = "/ui/dc1/intentions"
+  port   = 8500
+}
+
+resource "tab" "terminal_consul" {
+  type   = "terminal"
+  title  = "Terminal"
+  target = resource.container.consul
+}
+
+resource "tab" "code_consul" {
+  type   = "code"
+  title  = "Editor"
+  target = resource.container.consul
+  path   = "/etc/consul.d"
 }
 

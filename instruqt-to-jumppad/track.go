@@ -12,7 +12,7 @@ import (
 	"github.com/jumppad-labs/hclconfig/convert"
 )
 
-func GenerateTrack(track *model.Track, challenges []model.Challenge) *hclwrite.Block {
+func (c *Config) GenerateTrack(track *model.Track, challenges []model.Challenge) *hclwrite.Block {
 	trackBlock := hclwrite.NewBlock("resource", []string{"track", track.Slug})
 	trackBody := trackBlock.Body()
 

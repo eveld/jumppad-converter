@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
 	"github.com/instruqt/converter/model"
 	"github.com/jumppad-labs/hclconfig/convert"
 )
 
-func GenerateTabSlug(tab model.Tab) string {
+func (c *Config) GenerateTabSlug(tab model.Tab) string {
 	var slug string
 	switch tab.Type {
 	case "service":
@@ -22,7 +23,7 @@ func GenerateTabSlug(tab model.Tab) string {
 	return slug
 }
 
-func GenerateTab(tab *model.Tab, slug string) *hclwrite.Block {
+func (c *Config) GenerateTab(tab *model.Tab, slug string) *hclwrite.Block {
 	/*
 		Tab naming:
 		service: resource.tab.type_hostname_port
@@ -46,11 +47,18 @@ func GenerateTab(tab *model.Tab, slug string) *hclwrite.Block {
 	body.SetAttributeValue("title", title)
 
 	if tab.Hostname != "" {
-		hostname, err := convert.GoToCtyValue(tab.Hostname)
+		resource, err := c.LookupResource(tab.Hostname)
 		if err != nil {
 			log.Fatal(err)
 		}
-		body.SetAttributeValue("hostname", hostname)
+
+		target := hclwrite.Tokens{
+			{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(resource),
+			},
+		}
+		body.SetAttributeRaw("target", target)
 	}
 
 	if tab.Path != "" {

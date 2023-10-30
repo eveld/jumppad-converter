@@ -13,7 +13,7 @@ import (
 	"github.com/jumppad-labs/hclconfig/convert"
 )
 
-func GenerateChallenge(challenge *model.Challenge, tabs map[string]model.Tab) *hclwrite.Block {
+func (c *Config) GenerateChallenge(challenge *model.Challenge, tabs map[string]model.Tab) *hclwrite.Block {
 	challengeBlock := hclwrite.NewBlock("resource", []string{"challenge", challenge.Slug})
 	challengeBody := challengeBlock.Body()
 
@@ -139,11 +139,18 @@ func GenerateChallenge(challenge *model.Challenge, tabs map[string]model.Tab) *h
 		block := challengeBody.AppendNewBlock(s.Type, nil)
 		body := block.Body()
 
-		target, err := convert.GoToCtyValue(s.Target)
+		resource, err := c.LookupResource(s.Target)
 		if err != nil {
 			log.Fatal(err)
 		}
-		body.SetAttributeValue("target", target)
+
+		target := hclwrite.Tokens{
+			{
+				Type:  hclsyntax.TokenIdent,
+				Bytes: []byte(resource),
+			},
+		}
+		body.SetAttributeRaw("target", target)
 
 		scriptFile := fmt.Sprintf("%s/scripts/%s_%s.sh", challenge.Slug, s.Type, s.Target)
 		err = os.WriteFile(filepath.Join("out", scriptFile), []byte(s.Content), 0755)
