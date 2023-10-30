@@ -76,9 +76,17 @@ func main() {
 			allTabs[slug] = tab
 		}
 
-		challengeBlock := config.GenerateChallenge(&challenge, challengeTabs)
-		root.AppendBlock(challengeBlock)
-		root.AppendNewline()
+		if challenge.Type == "quiz" {
+			quizBlock := config.GenerateQuiz(&challenge, challengeTabs)
+			root.AppendBlock(quizBlock)
+			root.AppendNewline()
+		}
+
+		if challenge.Type == "challenge" {
+			challengeBlock := config.GenerateChallenge(&challenge, challengeTabs)
+			root.AppendBlock(challengeBlock)
+			root.AppendNewline()
+		}
 	}
 
 	for slug, tab := range allTabs {

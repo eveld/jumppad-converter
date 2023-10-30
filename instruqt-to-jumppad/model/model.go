@@ -17,6 +17,7 @@ type Track struct {
 type Challenge struct {
 	ID         string
 	Slug       string `yaml:"slug"`
+	Type       string `yaml:"type"`
 	Title      string `yaml:"title"`
 	Teaser     string `yaml:"teaser"`
 	Notes      []Note `yaml:"notes"`
@@ -27,6 +28,8 @@ type Challenge struct {
 	Checks     map[string]string
 	Solves     map[string]string
 	Cleanups   map[string]string
+	Answers    []string `yaml:"answers"`
+	Solutions  []int    `yaml:"solution"`
 }
 
 type Note struct {

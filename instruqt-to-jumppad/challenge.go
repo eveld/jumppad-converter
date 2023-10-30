@@ -63,37 +63,6 @@ func (c *Config) GenerateChallenge(challenge *model.Challenge, tabs map[string]m
 		},
 	}
 	challengeBody.SetAttributeRaw("assignment", assignment)
-	challengeBody.AppendNewline()
-
-	// tabs
-	challengeTabs := hclwrite.Tokens{
-		{
-			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte("{\n"),
-		},
-	}
-
-	index := 0
-	for slug := range tabs {
-		separator := ","
-		if index == len(tabs)-1 {
-			separator = ""
-		}
-
-		challengeTabs = append(challengeTabs, &hclwrite.Token{
-			Type:  hclsyntax.TokenIdent,
-			Bytes: []byte(fmt.Sprintf("   resource.tab.%s%s\n", slug, separator)),
-		})
-
-		index++
-	}
-
-	challengeTabs = append(challengeTabs, &hclwrite.Token{
-		Type:  hclsyntax.TokenIdent,
-		Bytes: []byte(" }"),
-	})
-
-	challengeBody.SetAttributeRaw("tabs", challengeTabs)
 
 	// note
 	for index, note := range challenge.Notes {
@@ -133,6 +102,37 @@ func (c *Config) GenerateChallenge(challenge *model.Challenge, tabs map[string]m
 
 		challengeBody.AppendBlock(block)
 	}
+
+	// tabs
+	challengeBody.AppendNewline()
+	challengeTabs := hclwrite.Tokens{
+		{
+			Type:  hclsyntax.TokenIdent,
+			Bytes: []byte("{\n"),
+		},
+	}
+
+	index := 0
+	for slug := range tabs {
+		separator := ","
+		if index == len(tabs)-1 {
+			separator = ""
+		}
+
+		challengeTabs = append(challengeTabs, &hclwrite.Token{
+			Type:  hclsyntax.TokenIdent,
+			Bytes: []byte(fmt.Sprintf("   resource.tab.%s%s\n", slug, separator)),
+		})
+
+		index++
+	}
+
+	challengeTabs = append(challengeTabs, &hclwrite.Token{
+		Type:  hclsyntax.TokenIdent,
+		Bytes: []byte(" }"),
+	})
+
+	challengeBody.SetAttributeRaw("tabs", challengeTabs)
 
 	for _, s := range challenge.Scripts {
 		challengeBody.AppendNewline()
